@@ -1,4 +1,4 @@
-#include <Adafruit_GFX.h>       // Bibliothek für Grafikfunktionen
+#include <Adafruit_GFX.h>       // Bibliothek für Grafikfunktione
 #include <Adafruit_NeoMatrix.h> // Bibliothek für LED-Matrix-Steuerung
 #include <Adafruit_NeoPixel.h>  // Bibliothek für NeoPixel-LEDs
 
