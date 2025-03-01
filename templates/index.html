@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>CHROMASORT</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: #fff;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    h3 {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }    
+    .prediction {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    /* 3x3 Grid für Live-Stream und Lego-Bilder */
+    .grid-container {
+      display: grid;
+      grid-template-areas:
+        ".    legoTop   ."
+        "legoLeft live     legoRight"
+        ".    legoBottom .";
+      grid-gap: 10px;      
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      align-items: center;
+      justify-items: left center right;
+      margin: 0 auto 20px auto;
+      max-width: 1400px;
+    }
+    #grid-top { grid-area: legoTop; ; justify-self: center;}
+    #grid-left { grid-area: legoLeft; justify-self: end; }
+    #grid-center { grid-area: live; }
+    #grid-right { grid-area: legoRight; justify-self: first baseline;}
+    #grid-bottom { grid-area: legoBottom; justify-self: center;}
+
+    .color-block {
+    position: relative;
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 120px; 
+    height: 120px; 
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+
+    .percentage {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    .white { background-color: white; color: black}
+    .blue { background-color: blue; }
+    .yellow { background-color: yellow; color: black; }
+    .unknown {
+      background: linear-gradient(180deg, red, orange, yellow, green, blue, indigo, violet);
+    color: white;
+    font-weight: bold;
+}
+
+    /* Live-Stream */
+    #video-stream {
+      width: 100%;
+      max-width: 1280px;
+      border: 2px solid #fff;
+      display: block;
+    }
+    /* Lego-Bilder */
+    .lego-img {
+      width: 100px;
+      height: 100px;      
+    }
+    /* Log Toggle und Log-Bereich unter dem Grid */
+    .log-container {
+      max-width: 1400px;
+      margin: 20px auto;
+      padding: 10px;
+      background: #111;
+      border: 1px solid #444;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    #log-toggle {
+      background: #333;
+      color: #fff;
+      padding: 5px 10px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      margin-bottom: 5px;
+      display: block;
+    }
+    #debug-area {
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+      white-space: pre-wrap;
+    }
+    .overlay {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    <span style="color: red;">C</span>
+    <span style="color: orange;">H</span>
+    <span style="color: yellow;">R</span>
+    <span style="color: green;">O</span>
+    <span style="color: blue;">M</span>
+    <span style="color: rgb(98, 126, 97);">A</span>
+    <span style="color: violet;">S</span>
+    <span style="color: cyan;">O</span>
+    <span style="color: magenta;">R</span>
+    <span style="color: brown;">T</span>
+  </h1>
+
+  
+  <div class="prediction">
+    Aktuelle Vorhersage: <span id="prediction-status">Noch nicht gestartet</span>    
+  </div>
+  <div>
+    <span style="color: rgb(218, 106, 32);">
+      <h3>(Unbekannt) = (nicht "leer") + (Vorhersage < 70 %)</h3>
+    </span>    
+  </div>
+    
+    <div class="grid-container">
+      <div id="grid-top">
+        <div id="blau-overlay" class="color-block blue">            
+            <span class="percentage">0%</span>
+        </div>             
+      </div>
+
+      <div id="grid-left">
+        <div id="weiss-overlay" class="color-block white">
+            <span class="percentage">0%</span>
+        </div>             
+      </div>
+
+      <div id="grid-center">
+        <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Live Stream">
+      </div>
+
+          
+      <div id="grid-right">
+        <div id="gelb-overlay" class="color-block yellow">            
+            <span class="percentage">0%</span>
+        </div>             
+      </div>
+
+
+      <div id="grid-bottom">
+        <div id="unbekannt-overlay" class="color-block unknown">            
+            <span class="percentage">0%</span>
+        </div>             
+      </div>          
+  </div>
+  
+  <script>
+    // Aktualisiere die Hauptvorhersage
+    function updatePrediction() {
+      fetch('/prediction')
+      .then(response => response.json())
+      .then(data => {
+        let pred = data.prediction;
+        let statusText = pred.category.toUpperCase();
+                
+        // Aktualisiere die Overlays für die einzelnen Kategorien
+        if (pred.probabilities) {
+            function formatProbability(value) {
+                return (value < 70 && statusText !== "LEER" ) ? `(${value.toFixed(2)}%)` : `${value.toFixed(2)}%`;
+            }
+
+            document.querySelector("#weiss-overlay .percentage").innerText = formatProbability(pred.probabilities.weiss);
+            document.querySelector("#blau-overlay .percentage").innerText = formatProbability(pred.probabilities.blau);
+            document.querySelector("#gelb-overlay .percentage").innerText = formatProbability(pred.probabilities.gelb);
+            document.querySelector("#unbekannt-overlay .percentage").innerText = (pred.probabilities.unbekannt).toFixed(2) + "%";
+        }
+        
+        if (pred.probability !== null) {
+          if (pred.probability * 100 < 70 && statusText !== "LEER") {
+            statusText = "UNBEKANNT";
+          }           
+          statusText += " (" + (pred.probability).toFixed(2) * 100 + "%)";                    
+        }
+
+        document.getElementById("prediction-status").innerText = statusText;
+
+      })
+      .catch(error => console.error('Fehler:', error));
+    }
+    setInterval(updatePrediction, 1000);
+        
+  </script>
+</body>
+</html>

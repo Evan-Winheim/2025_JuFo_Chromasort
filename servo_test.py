@@ -2,6 +2,7 @@ from adafruit_servokit import ServoKit
 import time
 import serial
 _step_size = 1
+_time_wait = 3
 
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1, dsrdtr=True, rtscts=True)
 time.sleep(2)
@@ -36,34 +37,38 @@ try:
     # Hinten
     print("hinten")    
     move_servo_slowly(channel=0, start_angle=90, end_angle=45, step_size=_step_size, delay=0.05)    
-    time.sleep(0.5)    
+    time.sleep(0.5)  
+    blink_block(1)  # Blauer Block blinkt  
+    time.sleep(_time_wait)
     move_servo_slowly(channel=0, start_angle=45, end_angle=90, step_size=_step_size, delay=0.05)
-    blink_block(1)  # Blauer Block blinkt
     time.sleep(0.5)
     
 
     # Links   
     print("links") 
     move_servo_slowly(channel=15, start_angle=90, end_angle=45, step_size=_step_size, delay=0.05)    
-    time.sleep(0.5)    
+    time.sleep(0.5)  
+    blink_block(2)  # Weißer Block blinkt 
+    time.sleep(_time_wait) 
     move_servo_slowly(channel=15, start_angle=45, end_angle=90, step_size=_step_size, delay=0.05)
-    blink_block(2)  # Weißer Block blinkt
     time.sleep(0.5)
 
     # rechts
     print("rechts")
     move_servo_slowly(channel=15, start_angle=90, end_angle=135, step_size=_step_size, delay=0.05)
     time.sleep(0.5)
-    move_servo_slowly(channel=15, start_angle=135, end_angle=90, step_size=_step_size, delay=0.05)
     blink_block(3)  # Gelber Block blinkt
+    time.sleep(_time_wait)
+    move_servo_slowly(channel=15, start_angle=135, end_angle=90, step_size=_step_size, delay=0.05)
     time.sleep(0.5)
 
     # vorne
     print("vorne") 
     move_servo_slowly(channel=0, start_angle=90, end_angle=135, step_size=_step_size, delay=0.05)    
-    time.sleep(0.5)    
-    move_servo_slowly(channel=0, start_angle=135, end_angle=90, step_size=_step_size, delay=0.05)
+    time.sleep(0.5) 
     blink_block(4)  # Bunter Block blinkt
+    time.sleep(_time_wait)   
+    move_servo_slowly(channel=0, start_angle=135, end_angle=90, step_size=_step_size, delay=0.05)
     time.sleep(0.5)
     
     # mitte
