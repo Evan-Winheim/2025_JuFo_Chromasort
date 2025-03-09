@@ -6,6 +6,9 @@ import time
 import logging
 import serial
 from datetime import datetime, date
+import cv2
+import numpy as np
+from jetcam.utils import bgr8_to_jpeg
 
 from adafruit_servokit import ServoKit
 import torchvision.transforms as transforms
@@ -193,13 +196,19 @@ def steuerung(kategorie):
 current_prediction = {"category": "Noch nicht gestartet", "probability": None}
 evaluation_running = True
 
+def crop_image(image, x_start=45, y_start=0, width=130, height=224):
+    """Schneidet das Bild exakt wie im Training aus"""
+    return image[y_start:y_start+height, x_start:x_start+width]
+
 # Funktion für die Live-Bewertung
 def live_evaluation():
     global current_prediction
     while True:
         # Bild erfassen und vorverarbeiten
         image = camera.value
-        preprocessed = preprocess(image).to(device)
+        image_cropped = crop_image(image)
+        
+        preprocessed = preprocess(image_cropped).to(device)
         output = model(preprocessed)
         output = F.softmax(output, dim=1).detach().cpu().numpy().flatten()
 
@@ -247,8 +256,11 @@ def gen_frames():
             if frame is None:
                 logging.warning("Kein Frame von der Kamera empfangen.")
                 continue
+
+            image_cropped = crop_image(frame)    
+
             from jetcam.utils import bgr8_to_jpeg
-            jpeg_bytes = bgr8_to_jpeg(frame)
+            jpeg_bytes = bgr8_to_jpeg(image_cropped)
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n')
             time.sleep(0.1)
